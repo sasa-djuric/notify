@@ -5,23 +5,35 @@ import (
 	"strings"
 )
 
-func parseArgs() map[string]string {
-	args := map[string]string{}
+var args map[string]string
+
+func parseArgs() {
+	args = map[string]string{}
 
 	for i, s := range os.Args {
 		if strings.HasPrefix(s, "-") {
-			args[s] = os.Args[i+1]
+			if i+1 >= len(os.Args) || strings.HasPrefix(os.Args[i+1], "-") {
+				args[s] = "true"
+			} else {
+				args[s] = os.Args[i+1]
+			}
 		}
 	}
-
-	return args
 }
 
-func getArg(args map[string]string, arg string, argAlias string) string {
-	if val, ok := args["--"+arg]; ok {
-		return val
-	} else if aliasVal, ok := args["-"+argAlias]; ok {
-		return aliasVal
+func argExists(arg string, isFlag bool) bool {
+	if value, exists := args[arg]; exists && ((isFlag && value == "true") || (!isFlag && value != "true")) {
+		return true
+	}
+
+	return false
+}
+
+func getArg(arg string, argAlias string, isFlag bool) string {
+	if argExists("--"+arg, isFlag) {
+		return args["--"+arg]
+	} else if argExists("-"+argAlias, isFlag) {
+		return args["-"+argAlias]
 	}
 
 	return ""
